@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCQ جوكر التخدير - مولد الأسئلة الذكي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-dark: #1e293b;
+            --primary-cyan: #2dd4bf;
+        }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-dark);
+            color: white;
+            background-image: radial-gradient(circle at top right, #134e4a, transparent), 
+                              radial-gradient(circle at bottom left, #1e1b4b, transparent);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+        }
+        .btn-cyan {
+            background-color: var(--primary-cyan);
+            color: #0f172a;
+            transition: all 0.3s ease;
+        }
+        .btn-cyan:hover:not(:disabled) {
+            background-color: #26b9a8;
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(45, 212, 191, 0.4);
+        }
+        .btn-cyan:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .input-dark {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 0.75rem;
+        }
+        .difficulty-btn {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+        .difficulty-btn.active {
+            background: var(--primary-cyan);
+            color: #0f172a;
+            border-color: var(--primary-cyan);
+        }
+        .loader {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #0f172a;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="p-4 md:p-12">
+
+    <nav class="flex justify-between items-center mb-16 max-w-6xl mx-auto">
+        <div class="flex items-center gap-3">
+            <div class="p-2 bg-teal-500/20 rounded-lg">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2"><path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/><path d="m14 4 6 6"/></svg>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight">MCQ جوكر التخدير</h1>
+                <p class="text-xs text-teal-400">مولد أسئلة بالذكاء الاصطناعي</p>
+            </div>
+        </div>
+        <button class="text-xs border border-teal-500/30 px-4 py-2 rounded-full text-teal-400 hover:bg-teal-500/10 transition">الإصدار الاحترافي</button>
+    </nav>
+
+    <div class="text-center mb-12">
+        <h2 class="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
+            استخرج أسئلة احترافية من <br>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-400">الملفات الطبية الإنجليزية</span>
+        </h2>
+    </div>
+
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-7 glass-card p-8 relative">
+            <h3 class="text-xl font-bold mb-6">مواد المصدر (PDF / Text)</h3>
+            <div id="drop-zone" class="border-2 border-dashed border-teal-500/20 rounded-2xl p-16 text-center cursor-pointer hover:border-teal-500/50 transition bg-teal-500/5 group">
+                <input type="file" id="file-input" multiple accept=".pdf,.txt" class="hidden">
+                <div class="bg-teal-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <p class="text-lg font-bold mb-2">اضغط أو اسحب الملفات للرفع</p>
+                <div id="file-list" class="flex flex-wrap gap-2 justify-center mt-4"></div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-5 flex flex-col gap-6">
+            <div class="glass-card p-8">
+                <h3 class="text-xl font-bold mb-6">إعدادات التوليد</h3>
+                
+                <div class="mb-6">
+                    <label class="block text-sm text-gray-400 mb-3">عدد الأسئلة (النقاط)</label>
+                    <input type="number" id="q-count" value="10" placeholder="مثال: 20" class="w-full input-dark p-4 focus:ring-1 focus:ring-teal-500 outline-none text-left" dir="ltr">
+                </div>
+
+                <div class="mb-8">
+                    <label class="block text-sm text-gray-400 mb-3">مستوى الصعوبة</label>
+                    <div class="grid grid-cols-2 gap-2" id="difficulty-grid">
+                        <button class="difficulty-btn p-3 rounded-lg text-xs" data-val="easy">سهل</button>
+                        <button class="difficulty-btn p-3 rounded-lg text-xs active" data-val="medium">متوسط</button>
+                        <button class="difficulty-btn p-3 rounded-lg text-xs" data-val="hard">صعب</button>
+                        <button class="difficulty-btn p-3 rounded-lg text-xs" data-val="mixed">متنوع</button>
+                    </div>
+                </div>
+
+                <button id="generate-btn" class="w-full btn-cyan py-4 rounded-xl font-bold flex items-center justify-center gap-2 text-lg">
+                    <div id="loader-icon" class="loader hidden"></div>
+                    <span id="btn-text">توليد ملف الأسئلة الآن</span>
+                </button>
+                <p id="status-msg" class="text-center text-sm text-teal-400 mt-4 hidden"></p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-20 text-center pb-8 border-t border-white/5 pt-8">
+        <p class="text-gray-500 mb-2">تم البرمجة والتطوير لـ بوت جوكر التخدير</p>
+        <a href="https://t.me/ANSSf_2026_bot" class="text-teal-400 font-bold hover:underline" dir="ltr">@ANSSf_2026_bot</a>
+    </footer>
+
+    <script type="module">
+        // ✅ مفتاح Gemini API
+        const apiKey = "AIzaSyDkv7nSzIMcJhu0heVVyNVJBpHbMfugL2A";
+
+        // ✅ تحديد نموذج Gemini الصحيح
+        const GEMINI_MODEL = "gemini-2.5-flash";
+
+        let extractedText = "";
+        let selectedDifficulty = "medium";
+
+        // إعداد pdf.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedDifficulty = btn.dataset.val;
+            };
+        });
+
+        const fileInput = document.getElementById('file-input');
+        const dropZone = document.getElementById('drop-zone');
+        const fileList = document.getElementById('file-list');
+        const statusMsg = document.getElementById('status-msg');
+
+        dropZone.onclick = () => fileInput.click();
+
+        // دعم السحب والإفلات
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.borderColor = '#2dd4bf'; };
+        dropZone.ondragleave = () => { dropZone.style.borderColor = ''; };
+        dropZone.ondrop = async (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '';
+            const files = e.dataTransfer.files;
+            if (files.length > 0) await processFiles(files);
+        };
+
+        fileInput.onchange = async (e) => {
+            if (e.target.files.length > 0) await processFiles(e.target.files);
+        };
+
+        async function processFiles(files) {
+            fileList.innerHTML = "";
+            extractedText = "";
+            statusMsg.classList.add('hidden');
+
+            for (const file of files) {
+                const tag = document.createElement('div');
+                tag.className = "px-3 py-1 bg-teal-500/20 text-teal-400 rounded-md text-sm";
+                tag.innerText = file.name;
+                fileList.appendChild(tag);
+
+                if (file.type === "application/pdf") {
+                    extractedText += await extractTextFromPDF(file);
+                } else {
+                    extractedText += await file.text();
+                }
+            }
+
+            if (extractedText.trim().length > 0) {
+                setStatus(`✅ تم استخراج النص بنجاح (${extractedText.length} حرف)`);
+            }
+        }
+
+        async function extractTextFromPDF(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            let text = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                text += content.items.map(item => item.str).join(" ") + " ";
+            }
+            return text;
+        }
+
+        document.getElementById('generate-btn').onclick = async () => {
+            if (!extractedText || extractedText.trim().length < 50) {
+                alert("يرجى رفع ملف (PDF أو نصي) يحتوي على محتوى كافٍ أولاً.");
+                return;
+            }
+
+            const count = parseInt(document.getElementById('q-count').value) || 10;
+            if (count < 1 || count > 50) {
+                alert("يرجى إدخال عدد أسئلة بين 1 و 50.");
+                return;
+            }
+
+            setLoading(true, "جاري استخراج الأسئلة من النص الإنجليزي بالذكاء الاصطناعي...");
+
+            try {
+                const mcqs = await fetchMCQsFromGemini(extractedText, count, selectedDifficulty);
+                if (mcqs && mcqs.length > 0) {
+                    setLoading(true, `تم استخراج ${mcqs.length} سؤال ✅ جاري تجهيز ملف PDF...`);
+                    await generatePdfQuestionByQuestion(mcqs);
+                } else {
+                    alert("عذراً، لم نتمكن من استخراج الأسئلة. تأكد من أن الملف يحتوي على نصوص طبية باللغة الإنجليزية.");
+                    setLoading(false);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("حدث خطأ: " + err.message);
+                setLoading(false);
+            }
+        };
+
+        function setLoading(isLoading, msg = "") {
+            const btn = document.getElementById('generate-btn');
+            const loader = document.getElementById('loader-icon');
+            const btnText = document.getElementById('btn-text');
+
+            btn.disabled = isLoading;
+            loader.classList.toggle('hidden', !isLoading);
+            btnText.innerText = isLoading ? "جاري المعالجة..." : "توليد ملف الأسئلة الآن";
+            setStatus(msg);
+        }
+
+        function setStatus(msg) {
+            if (msg) {
+                statusMsg.innerText = msg;
+                statusMsg.classList.remove('hidden');
+            } else {
+                statusMsg.classList.add('hidden');
+            }
+        }
+
+        async function fetchMCQsFromGemini(text, count, difficulty) {
+            const prompt = `
+Generate EXACTLY ${count} multiple choice questions (MCQ) based on the medical concepts in this English text.
+Return ONLY a valid JSON array (no markdown, no explanation).
+Each object MUST have these EXACT keys:
+- "q_en": The question in English.
+- "q_ar": Accurate ARABIC translation of the question.
+- "options": Array of exactly 4 English options formatted as ["A) ...", "B) ...", "C) ...", "D) ..."].
+- "answer": The correct option text (e.g., "A) Propofol").
+Difficulty: ${difficulty}.
+Text: ${text.substring(0, 18000)}
+`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    temperature: 0.7,
+                    maxOutputTokens: 8192,
+                }
+            };
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+
+            for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errData = await response.json();
+                        throw new Error(errData.error?.message || `HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (!data.candidates || !data.candidates[0]) {
+                        throw new Error("لم يُرجع النموذج أي نتيجة.");
+                    }
+
+                    let responseText = data.candidates[0].content.parts[0].text;
+                    // تنظيف أي markdown زائد
+                    responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+
+                    const parsed = JSON.parse(responseText);
+
+                    // دعم صيغتين: مصفوفة مباشرة أو { questions: [...] }
+                    if (Array.isArray(parsed)) return parsed;
+                    if (parsed.questions && Array.isArray(parsed.questions)) return parsed.questions;
+
+                    throw new Error("صيغة الرد غير متوقعة من النموذج.");
+
+                } catch (e) {
+                    if (attempt === 2) throw e;
+                    setStatus(`⚠️ محاولة ${attempt + 2}/3 ...`);
+                    await new Promise(r => setTimeout(r, 2000));
+                }
+            }
+        }
+
+        // =====================================================================
+        // رسم كل سؤال منفرداً ثم تجميعها في PDF
+        // =====================================================================
+        async function generatePdfQuestionByQuestion(mcqs) {
+            const { jsPDF } = window.jspdf;
+
+            const PAGE_W_MM = 210;
+            const PAGE_H_MM = 297;
+            const MARGIN_MM = 15;
+            const CONTENT_W_MM = PAGE_W_MM - MARGIN_MM * 2;
+            const RENDER_PX_WIDTH = 740;
+
+            const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+            const pxToMm = CONTENT_W_MM / RENDER_PX_WIDTH;
+
+            const offscreen = document.createElement('div');
+            offscreen.style.cssText = `
+                position: fixed;
+                top: -9999px;
+                left: -9999px;
+                width: ${RENDER_PX_WIDTH}px;
+                background: #ffffff;
+                font-family: 'Cairo', sans-serif;
+                direction: rtl;
+            `;
+            document.body.appendChild(offscreen);
+
+            let currentY = MARGIN_MM;
+            let isFirstPage = true;
+
+            async function renderBlockToPdf(htmlEl) {
+                offscreen.innerHTML = '';
+                offscreen.appendChild(htmlEl);
+
+                const canvas = await html2canvas(htmlEl, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    width: RENDER_PX_WIDTH,
+                    windowWidth: RENDER_PX_WIDTH
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                const blockHeightMm = (canvas.height / 2) * pxToMm;
+
+                if (!isFirstPage && currentY + blockHeightMm > PAGE_H_MM - MARGIN_MM) {
+                    pdf.addPage();
+                    currentY = MARGIN_MM;
+                }
+
+                pdf.addImage(imgData, 'JPEG', MARGIN_MM, currentY, CONTENT_W_MM, blockHeightMm);
+                currentY += blockHeightMm + 5;
+                isFirstPage = false;
+            }
+
+            // رأس الصفحة
+            const headerEl = document.createElement('div');
+            headerEl.style.cssText = `
+                text-align: center;
+                padding: 20px 0 20px 0;
+                border-bottom: 4px solid #2dd4bf;
+                background: #ffffff;
+            `;
+            headerEl.innerHTML = `
+                <div style="font-size: 32px; font-weight: bold; color: #1e293b; margin: 0; font-family: Arial, sans-serif;">MCQ JOKER ANESTHESIA</div>
+                <div style="font-size: 16px; color: #64748b; margin-top: 8px; font-family: 'Cairo', sans-serif;">أسئلة طبية احترافية مترجمة</div>
+            `;
+            await renderBlockToPdf(headerEl);
+
+            // رسم الأسئلة
+            for (let index = 0; index < mcqs.length; index++) {
+                const q = mcqs[index];
+                setStatus(`جاري تحويل السؤال ${index + 1} من ${mcqs.length} إلى PDF...`);
+
+                const optionsHtml = (q.options || []).map(opt =>
+                    `<div style="margin-bottom:8px; font-size:15px; color:#334155; padding-right:10px; font-family:Arial,sans-serif;" dir="ltr">${opt}</div>`
+                ).join('');
+
+                const qEl = document.createElement('div');
+                qEl.style.cssText = `
+                    background-color: #f8fafc;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 12px;
+                    padding: 22px;
+                    width: 100%;
+                    box-sizing: border-box;
+                `;
+                qEl.innerHTML = `
+                    <div style="direction:ltr; text-align:left; font-size:17px; font-weight:bold; color:#0f172a; margin-bottom:12px; font-family:Arial,sans-serif;">
+                        ${index + 1}. ${q.q_en}
+                    </div>
+                    <div style="direction:rtl; text-align:right; font-size:15px; font-weight:700; color:#0f172a; margin-bottom:16px; border-right:4px solid #2dd4bf; padding:10px 14px; background-color:#f1f5f9; border-radius:6px; font-family:'Cairo',sans-serif;">
+                        <span style="color:#0d9488;">الترجمة:</span> ${q.q_ar}
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        ${optionsHtml}
+                    </div>
+                    <div style="direction:ltr; display:inline-block; background-color:#ccfbf1; border:1px solid #5eead4; padding:8px 18px; border-radius:8px; font-weight:bold; color:#0f766e; font-size:15px; font-family:Arial,sans-serif;">
+                        ✅ Correct Answer: ${q.answer}
+                    </div>
+                `;
+
+                await renderBlockToPdf(qEl);
+            }
+
+            // التذييل
+            const footerEl = document.createElement('div');
+            footerEl.style.cssText = `
+                text-align: center;
+                padding: 20px 0;
+                border-top: 2px dashed #94a3b8;
+                font-weight: bold;
+                color: #475569;
+                font-size: 15px;
+                background: #ffffff;
+                font-family: 'Cairo', sans-serif;
+            `;
+            footerEl.innerHTML = `جميع الحقوق محفوظة - بوت جوكر التخدير @ANSSf_2026_bot`;
+            await renderBlockToPdf(footerEl);
+
+            document.body.removeChild(offscreen);
+            pdf.save('Joker_MCQs.pdf');
+            setLoading(false, "✅ تم إنشاء ملف PDF بنجاح! تفقد التنزيلات.");
+        }
+    </script>
+</body>
+</html>
